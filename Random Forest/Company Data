@@ -1,0 +1,177 @@
+install.packages("randomForest")
+install.packages("caret", dependencies = TRUE)
+library(randomForest)
+library(caret)
+library(gmodels)
+library(pROC)
+library(DMwR)
+library(dplyr)
+install.packages("dismo")
+library(dismo)
+
+
+company <- read.csv(Company_Data.choose())
+attach(company)
+summary(company) 
+
+str(company) 
+
+names(company)
+
+company$ShelveLoc <- as.factor(company$ShelveLoc)
+company$Urban <- as.factor(company$Urban)
+company$US <- as.factor(company$US)
+
+
+sd(Sales)
+sd(CompPrice)
+sd(Income)
+sd(Advertising)
+sd(Population)
+sd(Price)
+sd(Age)
+sd(Education)
+
+var(Sales)
+var(CompPrice)
+var(Income)
+var(Advertising)
+var(Population)
+var(Price)
+var(Age)
+var(Education)
+
+cor(company[,-c(7,10,11)]) 
+
+
+ggplot(company) + geom_histogram(aes(Sales),binwidth = 0.5, color = "cyan")
+
+ggplot(company) + geom_histogram(aes(CompPrice),binwidth = 10, color = "cyan")
+
+ggplot(company) + geom_histogram(aes(Income),binwidth = 1, color = "cyan")
+
+ggplot(company) + geom_histogram(aes(Advertising),binwidth = 0.4, color = "cyan")
+
+ggplot(company) + geom_histogram(aes(Population),binwidth = 20, color = "cyan")
+
+ggplot(company) + geom_histogram(aes(Price),binwidth = 9, color = "cyan")
+
+ggplot(company) + geom_histogram(aes(Age),binwidth = 0.7, color = "cyan")
+
+ggplot(company) + geom_histogram(aes(Education),binwidth = 0.2, color = "cyan")
+
+
+
+High <- ifelse(Sales > 8,"Yes","No")
+High <- as.factor(High)
+
+company_new <- cbind(company[,-1],High) 
+str(company_new)
+prop.table(table(company_new$High)) 
+
+indatapartition <- createDataPartition(company_new$High, p=.60, list = F) 
+training <- company_new[indatapartition,]
+testing <- company_new[-indatapartition,]
+
+
+
+ctrl <- trainControl(method = "repeatedcv", number = 5, repeats = 15, verboseIter = TRUE, classProbs = TRUE)
+
+
+
+
+
+rf1 <- randomForest(High~. , data = company_new, ntree = 100, type = "class") 
+rf1 
+summary(rf1)
+print(importance(rf1)) 
+pred1<- predict(rf1, company_new[,-11])
+tab1 <- table(company_new[,11], pred1)
+tab1
+Acc1 <- sum(diag(tab1))/sum(tab1)
+Acc1
+
+trees1 <- c(100,500,700,1100,1500)
+
+acc <- c()
+precision1 <- c()
+recall1 <- c()
+f1score <- c()
+auc <- c()
+
+for(i in trees1) {
+  print(i)
+  
+  forest1 <- randomForest(High~. , data = training, trControl = ctrl,method = "gbm", ntree = i)
+  forest1
+  pred <- predict(forest1,testing[,-11], type = "response")
+  conf <- confusionMatrix(pred,testing$High, mode = "everything")
+  conf$byClass
+  areaundercurve <- roc(response = testing$High, predictor =factor(pred, ordered = TRUE), decreasing = TRUE)
+  acc <- c(acc, conf$overall[1])
+  precision1 <- c(precision1, conf$byClass[5])
+  recall1 <- c(recall1, conf$byClass[6])
+  f1score <- c(f1score, conf$byClass[7])
+  auc <- c(auc, areaundercurve$auc)
+}
+recall1
+precision1
+acc
+
+Evaluation <-data.frame("No of Trees" = trees1, "Accuracy" = acc, "Precision" = precision1, "Recall" = recall1, "F1" = f1score, "AUC" = auc)
+Evaluation
+
+
+
+
+normalise <- function(x) {
+  return((x - max(x))/(max(x) - min(x)))
+}
+
+company_norm <- as.data.frame(lapply(company_new[,-c(6,9,10,11)], normalise))
+company_norm_data <- cbind(company_norm, company_new[,c(6,9,10,11)])
+summary(company_norm_data)
+
+
+indatapartition1 <- createDataPartition(company_norm_data$High, p=.60, list = F)
+training1 <- company_new[indatapartition1,]
+testing1 <- company_new[-indatapartition1,]
+
+
+rf5 <- randomForest(High~. , data = training1, ntree = 500)
+rf5
+print(importance(rf5))
+pred5 <- predict(rf5, testing1[,-11])
+tab5 <- table(testing1[,11], pred5)
+tab5
+Acc5 <- sum(diag(tab5))/sum(tab5)
+Acc5
+
+
+acc1 <- c()
+precision11 <- c()
+recall11 <- c()
+f1score1 <- c()
+auc1 <- c()
+
+for(i in trees1) {
+  print(i)
+  
+  forest11 <- randomForest(High~. , data = training1, trControl = ctrl,method = "gbm", ntree = i)
+  forest11
+  pred1 <- predict(forest11,testing1[,-11], type = "response")
+  conf1 <- confusionMatrix(pred1,testing$High, mode = "everything")
+  conf1$byClass
+  areaundercurve1 <- roc(response = testing1$High, predictor =factor(pred1, ordered = TRUE), decreasing = TRUE)
+  acc1 <- c(acc1, conf1$overall[1])
+  precision11 <- c(precision11, conf1$byClass[5])
+  recall11 <- c(recall11, conf1$byClass[6])
+  f1score1 <- c(f1score1, conf1$byClass[7])
+  auc1 <- c(auc1, areaundercurve1$auc)
+}
+recall11
+precision11
+acc1
+
+Evaluation1 <-data.frame("No of Trees" = trees1, "Accuracy" = acc1, "Precision" = precision11, "Recall" = recall11, "F1" = f1score1, "AUC" = auc1)
+Evaluation1
