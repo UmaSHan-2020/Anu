@@ -1,0 +1,48 @@
+import pandas as pd
+from sklearn.tree import DecisionTreeClassifier 
+from sklearn.model_selection import train_test_split 
+from sklearn.metrics import accuracy_score
+from sklearn.ensemble import BaggingClassifier
+from sklearn.ensemble import AdaBoostClassifier 
+
+from sklearn.metrics import classification_report, confusion_matrix
+
+company=pd.read_csv("Company_Data.csv")
+company.head()
+
+company.dtypes
+
+company['High'] = company.Sales.map(lambda x: 1 if x>8 else 0)
+company['ShelveLoc']=company['ShelveLoc'].astype('category')
+company['Urban']=company['Urban'].astype('category')
+company['US']=company['US'].astype('category')
+company.dtypes
+company.head()
+
+company['ShelveLoc']=company['ShelveLoc'].cat.codes
+company['Urban']=company['Urban'].cat.codes
+company['US']=company['US'].cat.codes
+company.tail()
+
+feature_cols=['CompPrice','Income','Advertising','Population','Price','ShelveLoc','Age','Education','Urban','US']
+
+x = company[feature_cols]
+y = company.High
+print(x)
+print(y)
+
+x_train,x_test,y_train,y_test= train_test_split(x,y, test_size=0.2,random_state=0)
+
+dcmodel =  BaggingClassifier(DecisionTreeClassifier(max_depth = 6), random_state=0) 
+dcmodel =  AdaBoostClassifier(DecisionTreeClassifier(max_depth = 6), random_state=0)
+
+dcmodel = dcmodel.fit(x_train,y_train) 
+y_predict = dcmodel.predict(x_test)
+
+print("Accuracy : ", accuracy_score(y_test,y_predict)*100 )
+
+print(confusion_matrix(y_test,y_predict))
+print(classification_report(y_test,y_predict))
+
+
+
