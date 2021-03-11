@@ -1,0 +1,127 @@
+import numpy as np 
+import pandas as pd 
+pd.set_option('display.max_colwidth', -1)
+from time import time
+import re
+import string
+import os
+from pprint import pprint
+import collections
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+sns.set(style="darkgrid")
+sns.set(font_scale=1.3)
+
+from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import train_test_split
+from sklearn.pipeline import Pipeline, FeatureUnion
+from sklearn.metrics import classification_report
+
+from nltk.corpus import stopwords
+from nltk.stem import PorterStemmer
+from nltk.tokenize import word_tokenize
+import warnings
+warnings.filterwarnings('ignore')
+np.random.seed(37)
+
+df = pd.read_csv('Tweets.csv')
+df = df.reindex(np.random.permutation(df.index))
+df = df[['text', 'airline_sentiment']]
+
+sns.factorplot(x="airline_sentiment", data=df, kind="count", size=6, aspect=1.5, palette="PuBuGn_d")
+plt.show();
+
+class TextCounts(BaseEstimator, TransformerMixin):
+    
+    def count_regex(self, pattern, tweet):
+        return len(re.findall(pattern, tweet))
+    
+    def fit(self, X, y=None, **fit_params):
+        
+        return self
+    
+    def transform(self, X, **transform_params):
+        count_words = X.apply(lambda x: self.count_regex(r'\w+', x)) 
+        count_mentions = X.apply(lambda x: self.count_regex(r'@\w+', x))
+        count_hashtags = X.apply(lambda x: self.count_regex(r'#\w+', x))
+        count_capital_words = X.apply(lambda x: self.count_regex(r'\b[A-Z]{2,}\b', x))
+        count_excl_quest_marks = X.apply(lambda x: self.count_regex(r'!|\?', x))
+        count_urls = X.apply(lambda x: self.count_regex(r'http.?://[^\s]+[\s]?', x))
+        
+        df = pd.DataFrame({'count_words': count_words
+                           , 'count_mentions': count_mentions
+                           , 'count_hashtags': count_hashtags
+                           , 'count_capital_words': count_capital_words
+                           , 'count_excl_quest_marks': count_excl_quest_marks
+                           , 'count_urls': count_urls
+                                                     })
+        
+        return df
+tc = TextCounts()
+df_eda = tc.fit_transform(df.text)
+df_eda['airline_sentiment'] = df.airline_sentiment
+
+def show_dist(df, col):
+    print('Descriptive stats for {}'.format(col))
+    print('-'*(len(col)+22))
+    print(df.groupby('airline_sentiment')[col].describe())
+    bins = np.arange(df[col].min(), df[col].max() + 1)
+    g = sns.FacetGrid(df, col='airline_sentiment', size=5, hue='airline_sentiment', palette="PuBuGn_d")
+    g = g.map(sns.distplot, col, kde=False, norm_hist=True, bins=bins)
+    plt.show()
+
+class CleanText(BaseEstimator, TransformerMixin):
+    def remove_mentions(self, input_text):
+        return re.sub(r'@\w+', '', input_text)
+    
+    def remove_urls(self, input_text):
+        return re.sub(r'http.?://[^\s]+[\s]?', '', input_text)
+    
+    def remove_punctuation(self, input_text):
+        punct = string.punctuation
+        trantab = str.maketrans(punct, len(punct)*' ')  
+        return input_text.translate(trantab)
+    def remove_digits(self, input_text):
+        return re.sub('\d+', '', input_text)
+    
+    def to_lower(self, input_text):
+        return input_text.lower()
+    
+    
+    def stemming(self, input_text):
+        porter = PorterStemmer()
+        words = input_text.split() 
+        stemmed_words = [porter.stem(word) for word in words]
+        return " ".join(stemmed_words)
+    
+    def fit(self, X, y=None, **fit_params):
+        return self
+    
+    def transform(self, X, **transform_params):
+        clean_X = X.apply(self.remove_mentions).apply(self.remove_urls).apply(self.remove_punctuation).apply(self.remove_digits).apply(self.to_lower).apply(self.stemming)
+        return clean_X
+
+ct = CleanText()
+sr_clean = ct.fit_transform(df.text)
+sr_clean.sample(3)
+
+empty_clean = sr_clean == ''
+print('{} records have no words left after text cleaning'.format(sr_clean[empty_clean].count()))
+sr_clean.loc[empty_clean] = '[no_text]'
+
+cv = CountVectorizer()
+bow = cv.fit_transform(sr_clean)
+word_freq = dict(zip(cv.get_feature_names(), np.asarray(bow.sum(axis=0)).ravel()))
+word_counter = collections.Counter(word_freq)
+word_counter_df = pd.DataFrame(word_counter.most_common(20), columns = ['word', 'freq'])
+fig, ax = plt.subplots(figsize=(12, 10))
+sns.barplot(x="word", y="freq", data=word_counter_df, palette="PuBuGn_d", ax=ax)
+plt.show();
+
+df_model = df_eda
+df_model['clean_text'] = sr_clean
+df_model.columns.tolist()
