@@ -1,0 +1,190 @@
+import numpy as np
+import pandas as pd 
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+import warnings
+warnings.filterwarnings('ignore')
+
+
+df = pd.read_excel("EastWestAirlines.xlsx", sheet_name='data')
+
+df.head()
+
+df= df.rename(columns={'ID#':'ID', 'Award?':'Award'})
+df1 =  df.drop(['ID','Award'], axis=1)
+
+df1.head(3)
+
+from sklearn.preprocessing import StandardScaler
+std_df = StandardScaler().fit_transform(df1)      
+std_df.shape
+
+from sklearn.preprocessing import MinMaxScaler
+minmax = MinMaxScaler()
+
+minmax_df = minmax.fit_transform(df1)
+minmax_df.shape
+
+from sklearn.decomposition import PCA
+pca_std = PCA(random_state=10, n_components=0.95)
+pca_std_df= pca_std.fit_transform(std_df)
+
+print(pca_std.singular_values_)
+
+print(pca_std.explained_variance_ratio_*100)
+
+cum_variance = np.cumsum(pca_std.explained_variance_ratio_*100)
+cum_variance
+
+from sklearn.decomposition import PCA
+
+pca_minmax =  PCA(random_state=10, n_components=0.95)
+pca_minmax_df = pca_minmax.fit_transform(minmax_df)
+
+print(pca_minmax.singular_values_)
+
+print(pca_minmax.explained_variance_ratio_*100)
+
+from sklearn.metrics import silhouette_score
+from sklearn.cluster import KMeans
+
+list1= [2,3,4,5,6,7,8,9]  
+
+for n_clusters in list1:
+    clusterer1 = KMeans(n_clusters=n_clusters, random_state=0,n_jobs=-1)
+    cluster_labels1 = clusterer1.fit_predict(pca_std_df)
+    sil_score1= silhouette_score(pca_std_df, cluster_labels1)
+    print("For n_clusters =", n_clusters,"The average silhouette_score is :", sil_score1)
+
+from sklearn.metrics import silhouette_score
+
+list1= [2,3,4,5,6,7,8,9]  
+
+for n_clusters in list1:
+    clusterer2 = KMeans(n_clusters=n_clusters, random_state=0,n_jobs=-1)
+    cluster_labels2 = clusterer1.fit_predict(pca_minmax_df)
+    sil_score2= silhouette_score(pca_std_df, cluster_labels2)
+    print("For n_clusters =", n_clusters,"The average silhouette_score is :", sil_score2)
+
+model1 = KMeans(n_clusters=6, random_state=0,n_jobs=-1)
+y_predict1 = model1.fit_predict(pca_std_df)
+y_predict1.shape
+
+y_predict1
+
+model1.labels_
+
+model1.cluster_centers_
+
+model1.inertia_
+
+model1.score(pca_std_df) 
+
+model1.get_params()
+
+model1_cluster = pd.DataFrame(model1.labels_.copy(), columns=['Kmeans_Clustering'])
+
+Kmeans_df = pd.concat([df.copy(), model1_cluster], axis=1)
+Kmeans_df.head()
+
+fig, ax = plt.subplots(figsize=(10, 6))
+Kmeans_df.groupby(['Kmeans_Clustering']).count()['ID'].plot(kind='bar')
+plt.ylabel('ID Counts')
+plt.title('Kmeans Clustering (pca_std_df)',fontsize='large',fontweight='bold')
+ax.set_xlabel('Clusters', fontsize='large', fontweight='bold')
+ax.set_ylabel('ID counts', fontsize='large', fontweight='bold')
+plt.yticks(fontsize=15)
+plt.xticks(fontsize=15)
+plt.show()
+
+from sklearn.cluster import AgglomerativeClustering
+n_clusters = [2,3,4,5,6,7,8]  
+
+for n_clusters in n_clusters:
+    for linkages in ["ward", "complete", "average", "single"]:
+        hie_cluster1 = AgglomerativeClustering(n_clusters=n_clusters,linkage=linkages) 
+        hie_labels1 = hie_cluster1.fit_predict(pca_std_df)
+        silhouette_score1 = silhouette_score(pca_std_df, hie_labels1)
+        print("For n_clusters =", n_clusters,"The average silhouette_score with linkage-",linkages, ':',silhouette_score1)
+    print()
+
+from sklearn.cluster import AgglomerativeClustering
+n_clusters = [2,3,4,5,6,7,8]  
+
+for n_clusters in n_clusters:
+    for linkages in ["ward", "complete", "average", "single"]:
+        hie_cluster2 = AgglomerativeClustering(n_clusters=n_clusters,linkage=linkages) 
+        hie_labels2 = hie_cluster2.fit_predict(pca_minmax_df)
+        silhouette_score2 = silhouette_score(pca_minmax_df, hie_labels2)
+        print("For n_clusters =", n_clusters,"The average silhouette_score with linkage-",linkages, ':',silhouette_score2)
+    print()
+
+agg_clustering = AgglomerativeClustering(n_clusters=5, linkage='average')
+y_pred_hie = agg_clustering.fit_predict(pca_std_df)
+print(y_pred_hie.shape)
+y_pred_hie
+
+agg_clustering.n_clusters_
+
+agg_clustering.labels_
+
+agg_clustering.n_leaves_
+
+agg_clustering.n_connected_components_
+
+agg_clustering.children_
+
+(silhouette_score(pca_std_df, agg_clustering.labels_)*100).round(3)
+
+import scipy.cluster.hierarchy as shc
+for methods in ['average']: 
+    plt.figure(figsize =(20, 6)) 
+    
+    dict = {'fontsize':24,'fontweight' :16, 'color' : 'blue'}
+    
+    plt.title('Visualising the data, Method- {}'.format(methods),fontdict = dict) 
+    Dendrogram2 = shc.dendrogram(shc.linkage(pca_std_df, method = methods,optimal_ordering=False))
+
+hie_cluster = pd.DataFrame(agg_clustering.labels_.copy(), columns=['Hie_Clustering'])
+hie_df = pd.concat([dataset.copy(), hie_cluster], axis=1)
+hie_df .head()
+
+fig, ax = plt.subplots(figsize=(10, 6))
+hie_df.groupby(['Hie_Clustering']).count()['ID'].plot(kind='bar')
+plt.ylabel('ID Counts')
+plt.title('Hierarchical Clustering (pca_std_df)',fontsize='large',fontweight='bold')
+ax.set_xlabel('Clusters', fontsize='large', fontweight='bold')
+ax.set_ylabel('ID counts', fontsize='large', fontweight='bold')
+plt.yticks(fontsize=15)
+plt.xticks(fontsize=15)
+plt.show()
+
+Kmeans_df.groupby(['Kmeans_Clustering']).count()
+
+hie_df.groupby(['Hie_Clustering']).count()
+
+count_df = Kmeans_df.groupby(['Kmeans_Clustering']).count()
+count_df
+
+count = count_df.xs('ID' ,axis = 1)
+count.plot(kind='bar', title= 'Nuber Counts')
+plt.show()
+
+cluster1 = pd.DataFrame(Kmeans_df.loc[Kmeans_df.Kmeans_Clustering==0].mean(),columns= ['Cluster1_avg'])
+cluster2 = pd.DataFrame(Kmeans_df.loc[Kmeans_df.Kmeans_Clustering==1].mean(),columns= ['Cluster2_avg'])
+cluster3 = pd.DataFrame(Kmeans_df.loc[Kmeans_df.Kmeans_Clustering==2].mean(),columns= ['Cluster3_avg'])
+cluster4 = pd.DataFrame(Kmeans_df.loc[Kmeans_df.Kmeans_Clustering==3].mean(),columns= ['Cluster4_avg'])
+cluster5 = pd.DataFrame(Kmeans_df.loc[Kmeans_df.Kmeans_Clustering==4].mean(),columns= ['Cluster5_avg'])
+
+avg_df = pd.concat([cluster1,cluster2,cluster3,cluster4,cluster5],axis=1)
+avg_df
+
+for i , row in avg_df.iterrows():
+    fig = plt.subplots(figsize=(8,6))
+    j = avg_df.xs(i ,axis = 0)
+    plt.title(i, fontsize=16, fontweight=20)
+    j.plot(kind='bar',fontsize=14)
+    plt.show()
+    print()
