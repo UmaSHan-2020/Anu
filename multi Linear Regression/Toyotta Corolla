@@ -1,0 +1,164 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+%matplotlib inline
+import seaborn as sns
+from sklearn.metrics import mean_squared_error
+from collections import Counter
+
+df = pd.read_csv('ToyotaCorolla.csv',encoding = "ISO-8859-1")
+
+df.head()
+
+df.count()
+
+df.describe()
+
+df.isnull().sum()
+
+df.columns
+
+df.memory_usage().head()
+
+df.loc[:,['Fuel_Type','Price']].head(3)  
+
+df.dtypes.value_counts()
+
+df.select_dtypes(exclude = [object]).head(3)
+
+df.info()
+
+print(np.unique(df['Doors']))
+print(np.unique(df['cc']))
+print(np.unique(df['Automatic']))
+
+df.info()
+
+df['Met_Color'] = df['Met_Color'].astype('object')
+df['Automatic'] = df['Automatic'].astype('object')
+
+df.info()
+
+df.isnull().sum()
+
+     columns_to_drop = ['Model','Mfg_Month', 'Mfg_Year','Cylinders',
+       'Gears', 'Quarterly_Tax','Mfr_Guarantee', 'BOVAG_Guarantee',
+       'Guarantee_Period', 'ABS', 'Airbag_1', 'Airbag_2', 'Airco',
+       'Automatic_airco', 'Boardcomputer', 'CD_Player', 'Central_Lock',
+       'Powered_Windows', 'Power_Steering', 'Radio', 'Mistlamps',
+       'Sport_Model', 'Backseat_Divider', 'Metallic_Rim', 'Radio_cassette','Tow_Bar']
+df.drop(columns_to_drop, axis = 1, inplace= True)
+df.sample(5)
+
+df.describe().T
+
+df.rename(columns = {'Age_08_04':'Age_Months', 'cc':'CC'}, inplace = True)
+df.sample(2)
+
+df.insert(10,"Price_Class"," ")
+
+for i in range(0, len(df['Price']), 1):
+    if df['Price'].iloc[i] <= 8450:
+        df["Price_Class"].iloc[i] = 'Cheap'
+    elif df['Price'].iloc[i] >= 11950:
+         df["Price_Class"].iloc[i] = 'Expensive'
+    else:
+        df['Price_Class'].iloc[i] = 'Average'
+        
+
+df.insert(11, "Age", " ")
+
+df.describe().T
+
+i = 0
+while i < len(df['Age_Months']):
+    if df['Age_Months'].iloc[i] <= 44:
+        df['Age'].iloc[i] = 'New Model'
+        
+    elif df['Age_Months'].iloc[i] >= 70:
+        df['Age'].iloc[i] = 'Very Old'
+               
+    else:
+        df['Age'].iloc[i] = 'Old'
+    i+=1       
+
+df['Age'].value_counts()
+
+df['Price_Class'].value_counts()
+
+df.head()
+
+cars.insert(12, "Age-Year",0)
+cars.insert(12, 'KM/Month', 0)
+cars.head()
+
+def conversion(val1, val2):
+    val_con = val1/12
+    ratio   = val2/val1
+    return [val_con, ratio]
+
+df['Age-Year'], df['KM/Month'] = conversion(df['Age_Months'], df['KM'])
+
+df.sample(5)
+
+df.info()
+
+pd.crosstab(index = df['Fuel_Type'], columns = 'count', dropna = True)
+
+pd.crosstab(index = df['Automatic'], columns = df['Fuel_Type'], dropna = True)
+
+pd.crosstab(index = df['Automatic'], columns = df['Fuel_Type'], normalize = True, dropna = True)  
+
+pd.crosstab(index = df['Automatic'], columns = df['Fuel_Type'],margins = True, normalize = True, dropna = True)
+
+pd.crosstab(index = df['Automatic'], columns = df['Fuel_Type'],margins = True, normalize = 'index', dropna = True)
+
+pd.crosstab(index = df['Automatic'], columns = df['Fuel_Type'],margins = True, normalize = 'columns', dropna = True)
+
+numerical_data = df.select_dtypes(exclude = [object])
+print(numerical_data.shape)
+
+corr_matrix = numerical_data.corr()
+corr_matrix
+
+import matplotlib.pyplot as plt
+plt.scatter(df['Age-Year'], df['Price'], c = 'red')
+plt.title('Price vs Age of the Cars')
+plt.xlabel('Age in Years')
+plt.ylabel('Price(Euros)')
+plt.show()
+
+
+plt.hist(df['KM'], edgecolor = 'white', bins = 5)
+plt.title('Histogram of Kilometer')
+plt.xlabel('Kilometer')
+plt.ylabel('Frequency')
+plt.show()
+
+fuel_count = pd.value_counts(df['Fuel_Type'].values, sort = True)
+plt.xlabel('Frequency')
+plt.ylabel('Fuel Type')
+plt.title('Bar plot of Fuel Type')
+fuel_count.plot.barh()
+
+import seaborn as sns
+df.head()
+
+sns.set(style = 'darkgrid')
+sns.regplot(x = df['Age-Year'], y = df['Price'], marker = '*')
+
+sns.countplot(x = 'Fuel_Type', data = df, hue = 'Automatic')
+
+sns.distplot(df['Age_Months'], kde = False, bins = 5)
+
+
+sns.boxplot(y = df['Price'], x = df['Fuel_Type'], hue = df['Automatic'])
+
+
+f, (ax_box, ax_hist) = plt.subplots(2, gridspec_kw={'height_ratios':(.20,.80)})
+
+f, (ax_box, ax_hist) = plt.subplots(2, gridspec_kw={'height_ratios':(.20,.80)})
+sns.boxplot(df['Price'], ax = ax_box)
+sns.distplot(df['Price'], ax = ax_hist, kde = False)
+
+sns.pairplot(df, kind = 'scatter', hue = 'Fuel_Type')
