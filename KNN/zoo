@@ -1,0 +1,196 @@
+import os
+import pandas as pd 
+import numpy as np
+import itertools
+from sklearn.model_selection import train_test_split
+from sklearn import preprocessing
+from time import time  
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.model_selection import GridSearchCV
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import confusion_matrix
+from sklearn.model_selection import cross_val_score
+import matplotlib.pyplot as plt
+
+
+df2 = pd.DataFrame({'lab':['A', 'B', 'C'], 'val':[10, 30, 20]})
+ax = df2.plot.bar(x='lab', y='val', rot=0)
+zoo = pd.read_csv('Z:/AI/zoo.csv')
+print(zoo)
+
+zoo=zoo.drop('Animal_Name',axis=1)
+
+X=zoo.iloc[:,:16].values
+print(X)
+y=zoo.iloc[:,16].values
+print(y)
+
+zoo.shape
+parameters = {'n_neighbors':[4,5,6,7],
+          'leaf_size':[1,3,5],
+           'algorithm':['auto', 'kd_tree'],
+            'n_jobs':[-1]}
+
+
+ax = zoo['Airborne'].value_counts().plot(kind = 'bar', title = "Instances of Airborne Animals")
+ax.set_xlabel("Airborne or Not Airborne")
+ax.set_ylabel("Number of Instances")
+ax.xaxis.set(ticklabels=["Airborne","Not Airborne"])
+plt.show()
+
+ax = zoo['Aquatic'].value_counts().plot(kind = 'bar', title = "Instances of Aquatic Animals")
+ax.set_xlabel("Aquatic or Not Aquatic")
+ax.set_ylabel("Number of Instances")
+ax.xaxis.set(ticklabels=["Aquatic","Not Aquatic"])
+plt.show()
+
+ax = zoo['Predator'].value_counts().plot(kind = 'bar', title = "Instances of Predators")
+ax.set_xlabel("Predator or No Predator")
+ax.set_ylabel("Number of Instances")
+ax.xaxis.set(ticklabels=["Predator","No Predator"])
+plt.show()
+
+ax = zoo['Backbone'].value_counts().plot(kind = 'bar', title = "Instances of Animals with Backbone")
+ax.set_xlabel("Backbone or No backbone")
+ax.set_ylabel("Number of Instances")
+ax.xaxis.set(ticklabels=["Backbone","No Backbone"])
+plt.show()
+
+ax = zoo['Toothed'].value_counts().plot(kind = 'bar', title = "Instances of Animals with Teeth")
+ax.set_xlabel("Backbone or No backbone")
+ax.set_ylabel("Number of Instances")
+ax.xaxis.set(ticklabels=["Toothed","No Toothed"])
+plt.show()
+
+ax = zoo['Breathes'].value_counts().plot(kind = 'bar', title = "Instances of Animals which Resperates")
+ax.set_xlabel("Breathes or Does Not Breathe")
+ax.set_ylabel("Number of Instances")
+ax.xaxis.set(ticklabels=["Breathes","Does not Breathe"])
+plt.show()
+
+ax = zoo['Venomous'].value_counts().plot(kind = 'bar', title = "Instances of Venoumous Animals")
+ax.set_xlabel("Venomous or Not Venomous")
+ax.set_ylabel("Number of Instances")
+ax.xaxis.set(ticklabels=["Venomous","Not Venomous"])
+plt.show()
+
+ax = zoo['Fins'].value_counts().plot(kind = 'bar', title = "Instances of Animals with Fins")
+ax.set_xlabel("Fins or No Fins")
+ax.set_ylabel("Number of Instances")
+ax.xaxis.set(ticklabels=["Fins","No Fins"])
+plt.show()
+
+ax = zoo['Hair'].value_counts().plot(kind = 'bar', title = "Instances of Animals with Hair")
+ax.set_xlabel("Hair or No Hair")
+ax.set_ylabel("Number of Instances")
+ax.xaxis.set(ticklabels=["Hair","No Hair"])
+plt.show()
+
+ax = zoo['Eggs'].value_counts().plot(kind = 'bar', title = "Instances of Animals with Eggs")
+ax.set_xlabel("Eggs or No Eggs")
+ax.set_ylabel("Number of Instances")
+ax.xaxis.set(ticklabels=["Eggs","No Eggs"])
+plt.show()
+
+ax = zoo['Milk'].value_counts().plot(kind = 'bar', title = "Instances of Animals with Milk")
+ax.set_xlabel("Milk or No Milk")
+ax.set_ylabel("Number of Instances")
+ax.xaxis.set(ticklabels=["Milk","No Milk"])
+plt.show()
+
+ax = zoo['Fins'].value_counts().plot(kind = 'bar', title = "Instances of Fins")
+ax.set_xlabel("Fins or No Fins")
+ax.set_ylabel("Number of Instances")
+ax.xaxis.set(ticklabels=["Fins","No Fins"])
+plt.show()
+
+ax = zoo['Legs'].value_counts().plot(kind = 'bar', title = "Number of legs ")
+ax.set_xlabel("Number of Legs")
+ax.set_ylabel("Number of Instances")
+ax.xaxis.set(ticklabels=["Legs","No Legs"])
+plt.show()
+
+ax = zoo['Tail'].value_counts().plot(kind = 'bar', title = "Number of Animals with Tails")
+ax.set_xlabel("Tail or No Tail")
+ax.set_ylabel("Number of Instances")
+ax.xaxis.set(ticklabels=["Tail","No Tail"])
+plt.show()
+
+ax = zoo['Domestic'].value_counts().plot(kind = 'bar', title = "Number of Domestic Animals")
+ax.set_xlabel("Domestic or No Domestic")
+ax.set_ylabel("Number of Instances")
+ax.xaxis.set(ticklabels=["Domestic","No Domestic"])
+plt.show()
+
+ax = zoo['Catsize'].value_counts().plot(kind = 'bar', title = "Instances of Catsize")
+ax.set_xlabel("Catsize or No Catsize")
+ax.set_ylabel("Number of Instances")
+ax.xaxis.set(ticklabels=["Catsize","No Catsize"])
+plt.show()
+ 
+ax = zoo['Type'].value_counts().plot(kind = 'bar', title = "Instances of Types")
+ax.set_xlabel("Types")
+ax.set_ylabel("Number of Instances")
+ax.xaxis.set(ticklabels=["Type1","Type2","Type 3","Type 4","Type 5","Type 6","Type 7"])
+plt.show()
+
+
+# Preprocesing - Inputted in the console
+zoo.Hair.describe()
+zoo.Feathers.describe()
+zoo.Eggs.describe()
+zoo.Milk.describe()
+zoo.Airborne.describe()
+zoo.Aquatic.describe()
+zoo.Predator.describe()
+zoo.Toothed.describe()
+zoo.Backbone.describe()
+zoo.Breathes.describe()
+zoo.Venomous.describe()
+zoo.Fins.describe()
+zoo.Legs.describe()
+zoo.Tail.describe()
+zoo.Domestic.describe()
+zoo.Catsize.describe()
+zoo.Type.describe()
+
+
+
+#This is for the decision tree classifier splitting the dataset for this algorithm
+x_train, x_test, y_train, y_test = train_test_split(X, y, test_size= 0.30, random_state= 50)
+
+#KNeighbours CLASSIFER
+clf =KNeighborsClassifier() 
+clf.fit (x_train, y_train)
+score = clf.score(x_test, y_test)
+y_pred=clf.predict(x_test)
+print(accuracy_score(y_test, y_pred))
+
+
+#DEFINE PARAMETERS FOR HIGHEST SCORE FOR KNeighbors CLASSIFIER  
+param_grid = {'n_neighbors': [5, 2]}
+
+#GRID SEARCH FOR DECISION TREE CLASSIFIER
+grid_search = GridSearchCV(clf, param_grid=param_grid, cv=10)
+start = time()
+
+grid_search.fit(x_train, y_train)
+y_pred=grid_search.predict(x_test)
+#print(grid_score=grid_search.score(y_test, y_pred))
+
+#printing results
+def report(results, n_top=3):
+    for i in range(1, n_top + 1):
+        candidates = np.flatnonzero(results['rank_test_score'] == i)
+        for candidate in candidates:
+            print("Model with rank: {0}".format(i))
+            print("Mean validation score: {0:.3f} (std: {1:.3f})".format(
+                  results['mean_test_score'][candidate],
+                  results['std_test_score'][candidate]))
+            print("Parameters: {0}".format(results['params'][candidate]))
+            print("")
+
+print("GridSearchCV took %.2f seconds for %d candidate parameter settings."
+      % (time() - start, len(grid_search.cv_results_['params'])))
+
+report(grid_search.cv_results_)
