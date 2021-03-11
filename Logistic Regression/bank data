@@ -1,0 +1,415 @@
+import matplotlib.pyplot as plt
+import pandas as pd
+import seaborn as sns 
+df = pd.read_csv('bank-full.csv')
+print ('number of samples:',len(df))
+from mpl_toolkits.mplot3d import Axes3D
+from sklearn.preprocessing import StandardScaler
+import matplotlib.pyplot as plt 
+import numpy as np 
+import os
+
+
+for dirname, _, filenames in os.walk('bank-full.csv'):
+    for filename in filenames:
+        print(os.path.join(dirname, filename))
+
+nRowsRead = 11163
+df = pd.read_csv('bank-full.csv', delimiter=',', nrows = nRowsRead)
+df.dataframeName = 'bank-full.csv'
+nRow, nCol = df.shape
+print(f'There are {nRow} rows and {nCol} columns')
+
+df.head(5)
+
+df.shape
+
+df.columns
+
+df.dtypes
+
+val=df.isnull().values.any()
+
+if val==True:
+    print("Missing values present : ", df.isnull().values.sum())
+    df=df.dropna()
+else:
+    print("No missing values present")
+
+df.isnull().values.any()
+
+df.describe().T
+
+df.info()
+
+df.apply(lambda x: len(x.unique()))
+
+print('Jobs:\n',df['job'].unique())
+print('Marital:\n',df['marital'].unique())
+print('Default:\n',df['default'].unique())
+print('Education:\n',df['education'].unique())
+print('Housing:\n',df['housing'].unique())
+print('Loan:\n',df['loan'].unique())
+print('Contact:\n',df['contact'].unique())
+print('Month:\n',df['month'].unique())
+print('Day:\n',df['day'].unique())
+print('Campaign:\n',df['campaign'].unique())
+
+df.mean()
+
+df.median()
+
+df.std()
+
+df.skew(axis = 0, skipna = True) 
+
+print (df.shape)
+
+
+print(list(df.columns))
+
+df
+
+df.hist(figsize=(10,10),color="blueviolet",grid=False)
+plt.show()
+
+sns.pairplot(df.iloc[:,1:])
+
+print('Min age: ', df['age'].max())
+print('Max age: ', df['age'].min())
+
+plt.figure(figsize = (30,12))
+sns.countplot(x = 'age',  palette="rocket", data = df)
+plt.xlabel("Age", fontsize=15)
+plt.ylabel('Count', fontsize=15)
+plt.title('Age Distribution', fontsize=15)
+
+sns.boxplot(x = 'age', data = df, orient = 'v')
+plt.ylabel("Age", fontsize=15)
+plt.title('Age Distribution', fontsize=15)
+
+sns.distplot(df['age'])
+plt.xlabel("Age", fontsize=15)
+plt.ylabel('Occurence', fontsize=15)
+plt.title('Age x Ocucurence', fontsize=15)
+
+print('1º Quartile: ', df['age'].quantile(q = 0.25))
+print('2º Quartile: ', df['age'].quantile(q = 0.50))
+print('3º Quartile: ', df['age'].quantile(q = 0.75))
+print('4º Quartile: ', df['age'].quantile(q = 1.00))
+
+print('Ages above: ', df['age'].quantile(q = 0.75) + 
+                      1.5*(df['age'].quantile(q = 0.75) - df['age'].quantile(q = 0.25)), 'are outliers')
+
+print('Numerber of outliers: ', df[df['age'] > 70.5]['age'].count())
+print('Number of clients: ', len(df))
+print('Outliers are:', round(df[df['age'] > 70.5]['age'].count()*100/len(df),2), '%')
+
+plt.figure(figsize = (30,12))
+sns.countplot(x = 'job',data = df)
+plt.xlabel("job", fontsize=15)
+plt.ylabel('Count', fontsize=15)
+plt.title('Job Distribution', fontsize=20)
+
+sns.countplot(x = 'marital',data = df)
+plt.xlabel("Marital", fontsize=15)
+plt.ylabel('Count', fontsize=15)
+plt.title('Marital Distribution', fontsize=15)
+
+sns.boxplot(x='marital',y='age',hue='deposit',data=df)
+
+sns.countplot(x = 'default',data = df)
+plt.xlabel("Default", fontsize=15)
+plt.ylabel('Count', fontsize=15)
+plt.title('Default Distribution', fontsize=15)
+
+sns.boxplot(x='default',y='age',hue='deposit',data=df)
+
+print('Default:\n No credit in default:'     , df[df['default'] == 'no']     ['age'].count(),
+              '\n Yes to credit in default:' , df[df['default'] == 'yes']    ['age'].count())
+
+sns.countplot(x = 'housing',data = df)
+plt.xlabel("Housing", fontsize=15)
+plt.ylabel('Count', fontsize=15)
+plt.title('Housing Distribution', fontsize=15)
+
+print('Housing:\n No Housing:'     , df[df['housing'] == 'no']     ['age'].count(),
+              '\n Yes Housing:' , df[df['housing'] == 'yes']    ['age'].count())
+
+sns.boxplot(x='housing',y='age',hue='deposit',data=df)
+
+sns.countplot(x = 'loan',data = df)
+plt.xlabel("Loan", fontsize=15)
+plt.ylabel('Count', fontsize=15)
+plt.title('Loan Distribution', fontsize=15)
+
+print('Loan:\n No Personal loan:'     , df[df['loan'] == 'no']     ['age'].count(),
+              '\n Yes Personal Loan:' , df[df['loan'] == 'yes']    ['age'].count())
+
+sns.boxplot(x='loan',y='age',hue='deposit',data=df)
+
+sns.countplot(x = 'contact',data = df)
+plt.xlabel("Contact", fontsize=15)
+plt.ylabel('Count', fontsize=15)
+plt.title('Contact Distribution', fontsize=15)
+
+print('Contact:\n Unknown Contact:'     , df[df['contact'] == 'unknown']     ['age'].count(),
+              '\n Cellular Contact:'   , df[df['contact'] == 'cellular']    ['age'].count(),
+              '\n Telephone Contact:'  , df[df['contact'] == 'telephone']   ['age'].count())
+
+sns.countplot(x = 'month',data = df)
+plt.xlabel("In which Month was a person contacted", fontsize=15)
+plt.ylabel('Count', fontsize=15)
+plt.title('Monthly Distribution', fontsize=15)
+
+sns.boxplot(x=df["day"])
+
+sns.boxplot(x=df["duration"])
+
+
+sns.distplot(df['duration'])
+plt.xlabel("duration", fontsize=15)
+plt.ylabel('Count', fontsize=15)
+plt.title('Duration distribution', fontsize=15)
+
+print('1º Quartile: ', df['duration'].quantile(q = 0.25))
+print('2º Quartile: ', df['duration'].quantile(q = 0.50))
+print('3º Quartile: ', df['duration'].quantile(q = 0.75))
+print('4º Quartile: ', df['duration'].quantile(q = 1.00))
+
+print('Duration above: ', df['duration'].quantile(q = 0.75) + 
+                      1.5*(df['duration'].quantile(q = 0.75) - df['duration'].quantile(q = 0.25)), 'are outliers')
+
+print('Numerber of outliers: ', df[df['duration'] > 643.0]['duration'].count())
+print('Number of clients: ', len(df))
+print('Outliers are:', round(df[df['duration'] > 643.0]['duration'].count()*100/len(df),2), '%')
+
+
+plt.figure(figsize = (30,12))
+sns.countplot(x = 'campaign', data = df)
+plt.xlabel("Campaign", fontsize=15)
+plt.ylabel('Count', fontsize=15)
+plt.title('Campaign Distribution', fontsize=15)
+
+sns.boxplot(x = 'campaign', data = df, orient = 'v')
+plt.ylabel("Campaign", fontsize=15)
+plt.title('Campaign Distribution', fontsize=15)
+
+sns.distplot(df['campaign'])
+plt.xlabel("Campaign", fontsize=15)
+plt.ylabel('Count', fontsize=15)
+plt.title('Campaign distribution', fontsize=15)
+
+print('1º Quartile: ', df['campaign'].quantile(q = 0.25))
+print('2º Quartile: ', df['campaign'].quantile(q = 0.50))
+print('3º Quartile: ', df['campaign'].quantile(q = 0.75))
+print('4º Quartile: ', df['campaign'].quantile(q = 1.00))
+
+print('Campaign above: ', df['campaign'].quantile(q = 0.75) + 
+                      1.5*(df['campaign'].quantile(q = 0.75) - df['campaign'].quantile(q = 0.25)), 'are outliers')
+
+print('Numerber of outliers: ', df[df['campaign'] > 6.0]['campaign'].count())
+print('Number of clients: ', len(df))
+print('Outliers are:', round(df[df['campaign'] > 6.0]['campaign'].count()*100/len(df),2), '%')
+
+
+sns.boxplot(x='campaign',y='age',hue='deposit',data=df)
+
+sns.boxplot(x = 'pdays', data = df, orient = 'v')
+plt.ylabel("pdays", fontsize=15)
+plt.title('pdays Distribution', fontsize=15)
+
+sns.boxplot(x = 'previous', data = df, orient = 'v')
+plt.ylabel("Previous", fontsize=15)
+plt.title('Previous', fontsize=15)
+
+sns.countplot(x = 'poutcome', data = df, orient = 'v')
+plt.ylabel("Poutcome", fontsize=15)
+plt.title('Poutcome distribution', fontsize=15)
+
+print('poutcome:\n Unknown poutcome:'     , df[df['poutcome'] == 'unknown']   ['age'].count(),
+              '\n Failure in  poutcome:'  , df[df['poutcome'] == 'failure']   ['age'].count(),
+              '\n Other poutcome:'        , df[df['poutcome'] == 'other']     ['age'].count(),
+              '\n Success in poutcome:'   , df[df['poutcome'] == 'success']   ['age'].count())
+
+sns.boxplot(x='poutcome',y='age',hue='deposit',data=df)
+
+df.boxplot(by = 'deposit',  layout=(4,4), figsize=(20, 20))
+
+sns.countplot(x = 'deposit', data = df, orient = 'v')
+plt.ylabel("Target", fontsize=15)
+plt.title('Target distribution', fontsize=15)
+
+df.groupby(["deposit"]).count()
+
+cor=df.corr()
+cor
+
+plt.subplots(figsize=(10,8))
+sns.heatmap(cor,annot=True)
+
+from sklearn.preprocessing import LabelEncoder
+labelencoder_X = LabelEncoder()
+df['job']      = labelencoder_X.fit_transform(df['job']) 
+df['marital']  = labelencoder_X.fit_transform(df['marital']) 
+df['education']= labelencoder_X.fit_transform(df['education']) 
+df['default']  = labelencoder_X.fit_transform(df['default']) 
+df['housing']  = labelencoder_X.fit_transform(df['housing']) 
+df['loan']     = labelencoder_X.fit_transform(df['loan']) 
+
+df['contact']     = labelencoder_X.fit_transform(df['contact']) 
+df['month']       = labelencoder_X.fit_transform(df['month']) 
+
+def age(dataframe):
+    dataframe.loc[dataframe['age'] <= 32, 'age'] = 1
+    dataframe.loc[(dataframe['age'] > 32) & (dataframe['age'] <= 47), 'age'] = 2
+    dataframe.loc[(dataframe['age'] > 47) & (dataframe['age'] <= 70), 'age'] = 3
+    dataframe.loc[(dataframe['age'] > 70) & (dataframe['age'] <= 98), 'age'] = 4
+           
+    return dataframe
+
+age(df);
+
+
+df.head()
+
+print(df.shape)
+df.head()
+
+def duration(data):
+
+    data.loc[data['duration'] <= 102, 'duration'] = 1
+    data.loc[(data['duration'] > 102) & (data['duration'] <= 180)  , 'duration']    = 2
+    data.loc[(data['duration'] > 180) & (data['duration'] <= 319)  , 'duration']   = 3
+    data.loc[(data['duration'] > 319) & (data['duration'] <= 644.5), 'duration'] = 4
+    data.loc[data['duration']  > 644.5, 'duration'] = 5
+
+    return data
+duration(df);
+
+df.head()
+
+df.loc[(df['pdays'] == 999), 'pdays'] = 1
+df.loc[(df['pdays'] > 0) & (df['pdays'] <= 10), 'pdays'] = 2
+df.loc[(df['pdays'] > 10) & (df['pdays'] <= 20), 'pdays'] = 3
+df.loc[(df['pdays'] > 20) & (df['pdays'] != 999), 'pdays'] = 4 
+df.head()
+
+df['poutcome'].replace(['unknown', 'failure','other', 'success'], [1,2,3,4], inplace  = True)
+print(df.shape)
+df.head()
+
+Final_data=df
+print(Final_data.shape)
+Final_data.head()
+
+from sklearn import preprocessing
+from sklearn.naive_bayes import GaussianNB
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import train_test_split
+
+X = Final_data.values[:,0:15]  
+Y = Final_data.values[:,16] 
+X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size = 0.30, random_state = 7)
+
+clf = GaussianNB()
+clf.fit(X_train, Y_train)
+
+Y_pred = clf.predict(X_test)
+NB=accuracy_score(Y_test, Y_pred, normalize = True) 
+print('Accuracy_score:',NB)
+
+from sklearn import metrics
+from sklearn.metrics import accuracy_score
+
+
+print('Confusion_matrix of NB:')
+print(metrics.confusion_matrix(Y_test,Y_pred))
+
+final_data = Final_data[['age', 'job', 'marital', 'education', 'default', 'housing', 'loan',
+                     'contact', 'month', 'day', 'duration', 'campaign', 'pdays', 'previous', 'poutcome']]
+final_data.shape
+
+
+from sklearn.preprocessing import StandardScaler
+sc_X = StandardScaler()
+X_train = sc_X.fit_transform(X_train)
+X_test = sc_X.transform(X_test)
+X_std = pd.DataFrame(StandardScaler().fit_transform(final_data))
+X_std.columns = final_data.columns
+
+import numpy as np
+from sklearn.model_selection import train_test_split
+
+X = np.array(df.iloc[:,1:16]) 
+y = np.array(df['deposit'])
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=5)
+
+print(X_train.shape)
+print(y_train.shape)
+
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import recall_score
+
+neighbors = np.arange(0,25)
+
+for k in neighbors:
+    k_value = k+1
+    knn = KNeighborsClassifier(n_neighbors = k_value)
+    knn.fit(X_train, y_train)
+    y_pred = knn.predict(X_test)
+    print(accuracy_score(y_test, y_pred))
+
+myList = list(range(1,30))
+neighbors = list(filter(lambda x: x % 2 != 0, myList))
+
+
+ac_scores = []
+for k in neighbors:
+    knn = KNeighborsClassifier(n_neighbors=k)
+    knn.fit(X_train, y_train)
+    y_pred = knn.predict(X_test)
+    scores = accuracy_score(y_test, y_pred)
+    ac_scores.append(scores)
+
+MSE = [1 - x for x in ac_scores]
+
+optimal_k = neighbors[MSE.index(min(MSE))]
+print("The optimal number of neighbors is %d" % optimal_k)
+
+plt.plot(neighbors, MSE)
+plt.xlabel('Number of Neighbors K')
+plt.ylabel('Misclassification Error')
+plt.show()
+
+knn = KNeighborsClassifier(n_neighbors = 23)
+
+knn.fit(X_train, y_train)
+
+y_pred = knn.predict(X_test)
+
+KNN=accuracy_score(y_test, y_pred)  
+print('Accuracy_score:',KNN)  
+
+print('Confusion_matrix:')
+print(metrics.confusion_matrix(y_test, y_pred))
+
+array = df.values
+X = array[:,0:16] 
+Y = array[:,16]   
+test_size = 0.30 
+seed = 15  
+X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=test_size, random_state=seed)
+type(X_train)
+
+
+model = LogisticRegression()
+model.fit(X_train, y_train)
+y_predict = model.predict(X_test)
+LR = model.score(X_test, y_test)
+print('Accuracy:',LR)
+print('confusion_matrix:')
+print(metrics.confusion_matrix(y_test, y_predict))
+A=LR
