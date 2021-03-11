@@ -1,0 +1,97 @@
+import pandas as pd
+import numpy as np
+import seaborn as sns
+
+FraudCheck = pd.read_csv("Fraud_check.csv")
+FraudCheck.head()
+
+FraudCheck
+
+
+FraudCheck.columns
+
+
+FraudCheck.isnull().sum()
+
+sns.pairplot(FraudCheck)
+
+FraudCheck["TaxInc"] = pd.cut(FraudCheck["Taxable.Income"], bins = [10002,30000,99620], labels = ["Risky", "Good"])
+FraudCheck1 = FraudCheck.drop(columns=["Taxable.Income"])
+FCheck = pd.get_dummies(FraudCheck1.drop(columns = ["TaxInc"]))
+FraudCheck_final = pd.concat([FCheck, FraudCheck1["TaxInc"]], axis = 1)
+
+colnames = list(FraudCheck_final.columns)
+colnames
+
+predictors = colnames[:9]
+predictors
+
+target = colnames[9]
+target
+
+X = FraudCheck_final[predictors]
+X.shape
+Y = FraudCheck_final[target]
+
+from sklearn.model_selection import train_test_split
+train, test = train_test_split(FraudCheck_final, test_size = 0.3)
+FraudCheck_final["TaxInc"].unique()
+
+from sklearn.tree import DecisionTreeClassifier
+help(DecisionTreeClassifier)
+
+modelTree = DecisionTreeClassifier(criterion = "entropy")
+modelTree.fit(train[predictors], train[[target]])
+type([target])
+type(predictors)
+"""Prediction"""
+preds = modelTree.predict(test[predictors])
+preds
+type(preds)
+
+pd.Series(preds).value_counts()
+141/(141+39)
+pd.crosstab(test[target],preds) 
+temp = pd.Series(modelTree.predict(train[predictors])).reset_index(drop=True)
+np.mean(pd.Series(train.TaxInc).reset_index(drop=True)==pd.Series(modelTree.predict(train[predictors])))
+np.mean(preds==test.TaxInc)
+
+from sklearn.ensemble import RandomForestClassifier
+rf = RandomForestClassifier(n_jobs = 3, oob_score = True, n_estimators = 15, criterion = "entropy")
+
+np.shape(FraudCheck_final)  
+len(Y)
+len(X)
+FraudCheck_final.describe()
+FraudCheck_final.info()
+type([X])
+type([Y])
+Y1 = pd.DataFrame(Y)
+type(Y1)
+
+rf.fit(X,Y1) 
+rf.estimators_  
+rf.classes_ 
+rf.n_classes_  
+rf.n_features_  
+
+rf.n_outputs_ 
+rf.oob_score_  
+rf.predict(X)
+
+FraudCheck_final['rf_pred'] = rf.predict(X)
+cols = ['rf_pred','TaxInc']
+FraudCheck_final[cols].head()
+FraudCheck_final["TaxInc"]
+
+from sklearn.metrics import confusion_matrix
+
+confusion_matrix(FraudCheck_final['TaxInc'],FraudCheck_final['rf_pred']) 
+
+pd.crosstab(FraudCheck_final['TaxInc'],FraudCheck_final['rf_pred'])
+
+print("Accuracy",(476+115)/(476+115+9+0)*100)
+
+FraudCheck_final["rf_pred"]
+
+
