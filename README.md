@@ -1,1 +1,1 @@
-# Anu
+Data Science is all about mining hidden insights of data pertaining to trends, behaviour, interpretation and inferences to enable informed decisions to support the business. The professionals who perform these activities are said to be a Data Scientist / Science professional. Data Science is the most high-in-demand profession and as per Harvard and the most sort after profession in the world. No wonder Data Scientist course is one of the most sought after courses in Bangalore pertaining to trending technologies.
