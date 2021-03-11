@@ -1,0 +1,61 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+import seaborn as sns
+from sklearn.metrics import classification_report, accuracy_score
+from sklearn.model_selection import cross_val_score
+
+
+df = pd.read_csv('glass.csv')
+df.head()
+
+df.Type.value_counts()
+
+
+cor = df.corr()
+sns.heatmap(cor)
+
+sns.scatterplot(df['RI'],df['Na'],hue=df['Type'])
+
+
+dff = df.drop(['Ca','K'],axis=1) 
+X_train,X_test,y_train,y_test  = train_test_split(dff,df['Type'],test_size=0.3,random_state=45) 
+
+knn = KNeighborsClassifier(n_neighbors=4,metric='manhattan')
+knn.fit(X_train,y_train)
+
+
+KNeighborsClassifier(algorithm='auto', leaf_size=30, metric='manhattan',
+                     metric_params=None, n_jobs=None, n_neighbors=4, p=2,
+                     weights='uniform')
+y_pred = knn.predict(X_test)
+print(classification_report(y_test,y_pred))
+
+accuracy_score(y_test,y_pred)
+
+
+k_range = range(1,25)
+k_scores = []
+error_rate =[]
+for k in k_range:
+    knn = KNeighborsClassifier(n_neighbors=k)
+    scores = cross_val_score(knn,dff,df['Type'],cv=5,scoring='accuracy')
+    k_scores.append(scores.mean())
+    
+    knn.fit(X_train,y_train)
+    y_pred = knn.predict(X_test)
+    error_rate.append(np.mean(y_pred!=y_test))
+
+plt.plot(k_range,k_scores)
+plt.xlabel('value of k - knn algorithm')
+plt.ylabel('Cross validated accuracy score')
+plt.show()
+
+plt.plot(k_range,error_rate)
+plt.xlabel('value of k - knn algorithm')
+plt.ylabel('Error rate')
+plt.show()
+
