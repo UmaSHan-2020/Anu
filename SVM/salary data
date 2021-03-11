@@ -1,0 +1,486 @@
+
+import pandas as pd
+from IPython.display import Markdown, display
+from sklearn.model_selection import train_test_split
+import matplotlib.pyplot as plt
+from sklearn.metrics import roc_curve, auc
+import numpy as np
+from sklearn import metrics
+
+
+
+def printmd(string):
+    display(Markdown(string))
+    
+    
+from sklearn.linear_model import LogisticRegression
+from sklearn import svm
+from sklearn import tree
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.neural_network import MLPClassifier
+from sklearn.ensemble import AdaBoostClassifier
+from sklearn.model_selection import cross_val_score
+
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import roc_curve, auc
+from sklearn.preprocessing import label_binarize
+
+
+get_ipython().run_line_magic('matplotlib', 'inline')
+
+column_names = ['age', 'workclass',  'education', 'educationno','maritalstatus', 'occupation', 'relationship', 'race', 'sex','capitalgain', 'capitalloss', 'hoursperweek', 'native','salary']
+
+train = pd.read_csv('SalaryData_Test.csv', sep=",\s", header=None, names = column_names, engine = 'python')
+test = pd.read_csv('SalaryData_Train.csc', sep=",\s", header=None, names = column_names, engine = 'python')
+test['salary'].replace(regex=True,inplace=True,to_replace=r'\.',value=r'')
+
+
+adult = pd.concat([test,train])
+adult.reset_index(inplace = True, drop = True)
+
+for col in set(adult.columns) - set(adult.describe().columns):
+    adult[col] = adult[col].astype('category')
+    
+printmd('## 1.1. Columns and their types')
+print(adult.info())
+
+printmd('## 1.2. Data')
+adult.head()
+
+printmd('## 1.3. Summary Statistics')
+
+adult.describe()
+
+printmd('## 1.4. Missing values')
+for i,j in zip(adult.columns,(adult.values.astype(str) == '?').sum(axis = 0)):
+    if j > 0:
+        printmd(str(i) + ': ' + str(j) + ' records')
+
+def oneHotCatVars(df, df_cols):
+    
+    df_1 = adult_data = df.drop(columns = df_cols, axis = 1)
+    df_2 = pd.get_dummies(df[df_cols])
+    
+    return (pd.concat([df_1, df_2], axis=1, join='inner'))
+
+
+printmd('### 1.4.1. Filling in missing values for Attribute workclass')
+
+test_data = adult[(adult.workclass.values == '?')].copy()
+test_label = test_data.workclass
+
+train_data = adult[(adult.workclass.values != '?')].copy()
+train_label = train_data.workclass
+
+test_data.drop(columns = ['workclass'], inplace = True)
+train_data.drop(columns = ['workclass'], inplace = True)
+
+train_data = oneHotCatVars(train_data, train_data.select_dtypes('category').columns)
+test_data = oneHotCatVars(test_data, test_data.select_dtypes('category').columns)
+
+log_reg = LogisticRegression()
+log_reg.fit(train_data, train_label)
+log_reg_pred = log_reg.predict(test_data)
+
+
+clf = tree.DecisionTreeClassifier()
+clf = clf.fit(train_data, train_label)
+clf_pred = clf.predict(test_data)
+
+r_forest = RandomForestClassifier(n_estimators=10)
+r_forest.fit(train_data, train_label)
+r_forest_pred = r_forest.predict(test_data)
+
+majority_class = adult.workclass.value_counts().index[0]
+
+pred_df =  pd.DataFrame({'RFor': r_forest_pred, 'DTree' : clf_pred, 'LogReg' : log_reg_pred})
+overall_pred = pred_df.apply(lambda x: x.value_counts().index[0] if x.value_counts()[0] > 1 else majority_class, axis = 1)
+
+adult.loc[(adult.workclass.values == '?'),'workclass'] = overall_pred.values
+print(adult.workclass.value_counts())
+print(adult.workclass.unique())
+
+printmd('### 1.4.2. Filling in missing values for occupation')
+
+test_data = adult[(adult.occupation.values == '?')].copy()
+test_label = test_data.occupation
+
+train_data = adult[(adult.occupation.values != '?')].copy()
+train_label = train_data.occupation
+
+test_data.drop(columns = ['occupation'], inplace = True)
+train_data.drop(columns = ['occupation'], inplace = True)
+
+train_data = oneHotCatVars(train_data, train_data.select_dtypes('category').columns)
+test_data = oneHotCatVars(test_data, test_data.select_dtypes('category').columns)
+
+log_reg = LogisticRegression()
+log_reg.fit(train_data, train_label)
+log_reg_pred = log_reg.predict(test_data)
+
+
+clf = tree.DecisionTreeClassifier()
+clf = clf.fit(train_data, train_label)
+clf_pred = clf.predict(test_data)
+
+r_forest = RandomForestClassifier(n_estimators=10)
+r_forest.fit(train_data, train_label)
+r_forest_pred = r_forest.predict(test_data)
+
+
+majority_class = adult.occupation.value_counts().index[0]
+
+pred_df =  pd.DataFrame({'RFor': r_forest_pred, 'DTree' : clf_pred, 'LogReg' : log_reg_pred})
+overall_pred = pred_df.apply(lambda x: x.value_counts().index[0] if x.value_counts()[0] > 1 else majority_class, axis = 1)
+
+adult.loc[(adult.occupation.values == '?'),'occupation'] = overall_pred.values
+print(adult.occupation.value_counts())
+print(adult.occupation.unique())
+
+
+printmd('### 1.4.3. Filling in missing values for Native ')
+
+test_data = adult[(adult['native'].values == '?')].copy()
+test_label = test_data['native']
+
+train_data = adult[(adult['native'].values != '?')].copy()
+train_label = train_data['native']
+
+test_data.drop(columns = ['native'], inplace = True)
+train_data.drop(columns = ['native'], inplace = True)
+
+train_data = oneHotCatVars(train_data, train_data.select_dtypes('category').columns)
+test_data = oneHotCatVars(test_data, test_data.select_dtypes('category').columns)
+
+log_reg = LogisticRegression()
+log_reg.fit(train_data, train_label)
+log_reg_pred = log_reg.predict(test_data)
+
+
+clf = tree.DecisionTreeClassifier()
+clf = clf.fit(train_data, train_label)
+clf_pred = clf.predict(test_data)
+
+r_forest = RandomForestClassifier(n_estimators=10)
+r_forest.fit(train_data, train_label)
+r_forest_pred = r_forest.predict(test_data)
+
+
+majority_class = adult['native-country'].value_counts().index[0]
+
+pred_df =  pd.DataFrame({'RFor': r_forest_pred, 'DTree' : clf_pred, 'LogReg' : log_reg_pred})
+overall_pred = pred_df.apply(lambda x: x.value_counts().index[0] if x.value_counts()[0] > 1 else majority_class, axis = 1)
+
+adult.loc[(adult['native'].values == '?'),'native'] = overall_pred.values
+print(adult['native'].value_counts())
+print(adult['native'].unique())
+
+
+adult['workclass'] = adult['workclass'].cat.remove_categories('?')
+adult['occupation'] = adult['occupation'].cat.remove_categories('?')
+adult['native'] = adult['native'].cat.remove_categories('?')
+
+printmd('## 1.5. Correlation Matrix')
+
+display(adult.corr())
+
+printmd('We see that none of the columns are highly correlated.')
+
+edu_level = {}
+for x,y in adult[['educationno','education']].drop_duplicates().itertuples(index=False):
+    edu_level[y] = x
+
+printmd('## 2.1. Education vs salary')
+
+education = round(pd.crosstab(adult.education, adult.income).div(pd.crosstab(adult.education, adult.income).apply(sum,1),0),2)
+education = education.reindex(sorted(edu_level, key=edu_level.get, reverse=False))
+
+ax = education.plot(kind ='bar', title = 'Proportion distribution across education levels', figsize = (10,8))
+ax.set_xlabel('Education level')
+ax.set_ylabel('Proportion of population')
+
+printmd('I plot a bar graph showing the proportion of income classes across education levels in the figure below. As one would expect, we see from the bar graph below that as the education level increase, the proportion of people who earn more than 50k a year also increase. It is interesting to note that only after a master\'s degree, the proportion of  people earning more than 50k a year, is a majority.')
+
+printmd('## 2.2 Gender vs salary')
+
+gender = round(pd.crosstab(adult.gender, adult.income).div(pd.crosstab(adult.gender, adult.income).apply(sum,1),0),2)
+gender.sort_values(by = '>50K', inplace = True)
+ax = gender.plot(kind ='bar', title = 'Proportion distribution across gender levels')
+ax.set_xlabel('Gender level')
+ax.set_ylabel('Proportion of population')
+
+printmd('We plot a bar graph showing the proportion of income classes across the genders in figure below. From the graph, at an overall view, there exists a wage gap between females and males. since we do not have the exactly value of the income, we are limited to only observing that the  proportion of males earning more than 50k a year is more than double of their female counterparts.  ')
+
+
+
+gender_workclass = round(pd.crosstab(adult.workclass, [adult.salary, adult.gender]).div(pd.crosstab(adult.workclass, [adult.salary, adult.gender]).apply(sum,1),0),2)
+gender_workclass[[('>50K','Male'), ('>50K','Female')]].plot(kind = 'bar', title = 'Proportion distribution across gender for each workclass', figsize = (10,8), rot = 30)
+ax.set_xlabel('Gender level')
+ax.set_ylabel('Proportion of population')
+
+printmd('Taking a closer look at the disparity in income between men and women, plot the  proportion of men and women who earn more than 50k a year, across all the working classes as seen in Fig. 3. We see that men always have a higher proportion earning  more than 50k a year than women, except for the \'without.pay\' working class, where they have the same proportion.')
+
+printmd('## 2.3. Occupation vs salary')
+
+occupation = round(pd.crosstab(adult.occupation, adult.salary).div(pd.crosstab(adult.occupation, adult.salary).apply(sum,1),0),2)
+occupation.sort_values(by = '>50K', inplace = True)
+ax = occupation.plot(kind ='bar', title = 'Proportion distribution across Occupation levels', figsize = (10,8))
+ax.set_xlabel('Occupation level')
+ax.set_ylabel('Proportion of population')
+
+print()
+
+printmd('## 2.4. Workclass vs salary')
+
+workclass = round(pd.crosstab(adult.workclass, adult.salary).div(pd.crosstab(adult.workclass, adult.salary).apply(sum,1),0),2)
+workclass.sort_values(by = '>50K', inplace = True)
+ax = workclass.plot(kind ='bar', title = 'Proportion distribution across workclass levels', figsize = (10,8))
+ax.set_xlabel('Workclass level')
+ax.set_ylabel('Proportion of population')
+
+print()
+
+printmd('## 2.5. Race vs salary')
+
+race = round(pd.crosstab(adult.race, adult.salary).div(pd.crosstab(adult.race, adult.salary).apply(sum,1),0),2)
+race.sort_values(by = '>50K', inplace = True)
+ax = race.plot(kind ='bar', title = 'Proportion distribution across race levels', figsize = (10,8))
+ax.set_xlabel('Race level')
+ax.set_ylabel('Proportion of population')
+
+print()
+
+
+printmd('## 2.6. Native ')
+
+native_country = round(pd.crosstab(adult['native'], adult.salary).div(pd.crosstab(adult['native'], adult.salary).apply(sum,1),0),2)
+native_country.sort_values(by = '>50K', inplace = True)
+ax = native_country.plot(kind ='bar', title = 'Proportion distribution across Native Country levels', figsize = (20,12))
+ax.set_xlabel('Native country')
+ax.set_ylabel('Proportion of population')
+
+printmd('I plot a bar graph showing the proportion of income classes across the native country in figure         below. From the graph, we notice a trend in positioning of the country. South American country are         at the left end of the plot, with low proportion of population that make more than 50k a year. The         United States is located somewhat centrally, and at the right are countries from Europe and Asia,         with higher proportion of population that make more than 50k a year.')
+
+
+printmd('## 2.7. Hours per week vs salary')
+
+hours_per_week = round(pd.crosstab(adult['hoursperweek'], adult.salary).div(pd.crosstab(adult['hoursperweek'], adult.salary).apply(sum,1),0),2)
+
+ax = hours_per_week.plot(kind ='bar', title = 'Proportion distribution across Hours per week', figsize = (20,12))
+ax.set_xlabel('Hours per week')
+ax.set_ylabel('Proportion of population')
+
+printmd('I plot a bar graph showing the proportion of income classes across the hours worked.         We would expected to notice a trend that higher the hours worked per week, the higher the proportion         of population making more than 50k a year. However, this was not necessarily true from the graph.         For several hours instance (for example, where hours worked was 77, 79, 81, 82, 87, 88 and so on)         no one earned more than 50k a year. ')
+
+printmd('### 2.7.1 Hours per week with categories')
+
+adult['hour_worked_bins'] = ['<40' if i < 40 else '40-60' if i <= 60 else '>60'  for i in adult['hoursperweek']]
+adult['hour_worked_bins'] = adult['hour_worked_bins'].astype('category')
+hours_per_week = round(pd.crosstab(adult.hour_worked_bins, adult.salary).div(pd.crosstab(adult.hour_worked_bins, adult.salary).apply(sum,1),0),2)
+
+hours_per_week.sort_values(by = '>50K', inplace = True)
+ax = hours_per_week.plot(kind ='bar', title = 'Proportion distribution across Hours per week', figsize = (10,6))
+ax.set_xlabel('Hours per week')
+ax.set_ylabel('Proportion of population')
+
+printmd('Therefore, I decided to transform this column into 3 categories, less than 40 hours,         40 to 60 hours and greater than 60 hours. Plotting a bar graph with these 3 categories,         we can see from the figure below that there is an increasing trend in the proportion of         population making more than 50k a year.')
+
+printmd('### 2.7.2 Hours worked across working classes')
+
+for i in adult.workclass.unique():
+    df = adult[adult.workclass == i]
+
+    hours_per_week = round(pd.crosstab(df['hoursperweek'], df.salary).div(pd.crosstab(df['hoursperweek'], df.salary).apply(sum,1),0),2)
+
+    ax = hours_per_week.plot(kind ='bar', title = 'Proportion distribution across Hours per week for '+ i, figsize = (20,12))
+    ax.set_xlabel('Hours per week')
+    ax.set_ylabel('Proportion of population')
+
+    print()
+
+printmd('* For education level, we have 2 features that convey the same meaning, \'education\'         and \'educationno\'. To avoid the effect of this attribute on the models to be         overstated, I am not going to use the categorical education attribute.')
+printmd('* I use the categorical Hours work column and drop the \'hourperweek\' column')
+
+printmd('## Box plot')
+adult.select_dtypes(exclude = 'category').plot(kind = 'box', figsize = (10,8))
+
+printmd ('Normalization happens on the training dataset, by removing the mean and         scaling to unit variance. These values are stored and then later applied          to the test data before the test data is passed to the model for prediction. ')
+
+adult_data = adult.drop(columns = ['salary])
+adult_label = adult.salary
+
+
+adult_cat_1hot = pd.get_dummies(adult_data.select_dtypes('category'))
+adult_non_cat = adult_data.select_dtypes(exclude = 'category')
+
+adult_data_1hot = pd.concat([adult_non_cat, adult_cat_1hot], axis=1, join='inner')
+
+train_data, test_data, train_label, test_label = train_test_split(adult_data_1hot, adult_label, test_size  = 0.25)
+
+from sklearn.preprocessing import StandardScaler  
+scaler = StandardScaler()  
+
+
+scaler.fit(train_data)  
+train_data = scaler.transform(train_data)  
+
+test_data = scaler.transform(test_data) 
+
+
+def model_eval(actual, pred):
+    
+    confusion = pd.crosstab(actual, pred, rownames=['Actual'], colnames=['Predicted'])
+    TP = confusion.loc['>50K','>50K']
+    TN = confusion.loc['<=50K','<=50K']
+    FP = confusion.loc['<=50K','>50K']
+    FN = confusion.loc['>50K','<=50K']
+
+    accuracy = ((TP+TN))/(TP+FN+FP+TN)
+    precision = (TP)/(TP+FP)
+    recall = (TP)/(TP+FN)
+    f_measure = (2*recall*precision)/(recall+precision)
+    sensitivity = TP / (TP + FN)
+    specificity = TN / (TN + FP)
+    error_rate = 1 - accuracy
+    
+    out = {}
+    out['accuracy'] =  accuracy
+    out['precision'] = precision
+    out['recall'] = recall
+    out['f_measure'] = f_measure
+    out['sensitivity'] = sensitivity
+    out['specificity'] = specificity
+    out['error_rate'] = error_rate
+    
+    return out
+
+clf_gini = tree.DecisionTreeClassifier(criterion = 'gini', min_samples_split = 0.05, min_samples_leaf = 0.001, max_features = None)
+clf_gini = clf_gini.fit(train_data, train_label)
+clf_gini_pred = clf_gini.predict(test_data)
+DTree_Gini = model_eval(test_label, clf_gini_pred)
+print('Desicion Tree using Gini Index : %.2f percent.' % (round(DTree_Gini['accuracy']*100,2)))
+
+clf_entropy = tree.DecisionTreeClassifier(criterion = 'entropy', min_samples_split = 0.05, min_samples_leaf = 0.001)
+clf_entropy = clf_entropy.fit(train_data, train_label)
+clf_entropy_pred = clf_entropy.predict(test_data)
+DTree_Entropy = model_eval(test_label, clf_entropy_pred)
+print('Desicion Tree using Entropy : %.2f percent.' % (round(DTree_Entropy['accuracy']*100,2)))
+
+ovl_dtree = round(pd.DataFrame([DTree_Entropy, DTree_Gini], index = ['DTree_Entropy','DTree_Gini']),4)
+display(ovl_dtree)
+
+svm_clf_rbf = svm.SVC(kernel = 'rbf', C = 1, tol = 1e-3)
+svm_clf_rbf.fit(train_data, train_label)
+svm_clf_rbf_pred = svm_clf_rbf.predict(test_data)
+SVM_rbf = model_eval(test_label, svm_clf_rbf_pred)
+print('SVM using rbf kernel : %.2f percent.' % (round(SVM_rbf['accuracy']*100,2)))
+
+svm_clf_linear = svm.SVC(kernel = 'linear')
+svm_clf_linear.fit(train_data, train_label)
+svm_clf_linear_pred = svm_clf_linear.predict(test_data)
+SVM_linear = model_eval(test_label, svm_clf_linear_pred)
+print('SVM using linear kernel : %.2f percent.' % (round(SVM_linear['accuracy']*100,2)))
+
+svm_clf_poly = svm.SVC(kernel = 'poly')
+svm_clf_poly.fit(train_data, train_label)
+svm_clf_poly_pred = svm_clf_poly.predict(test_data)
+SVM_poly = model_eval(test_label, svm_clf_poly_pred)
+print('SVM using poly kernel : %.2f percent.' % (round(SVM_poly['accuracy']*100,2)))
+
+svm_clf_sigmoid = svm.SVC(kernel = 'sigmoid')
+svm_clf_sigmoid.fit(train_data, train_label)
+svm_clf_sigmoid_pred = svm_clf_sigmoid.predict(test_data)
+SVM_sigmoid = model_eval(test_label, svm_clf_sigmoid_pred)
+print('SVM using sigmoid kernel : %.2f percent.' % (round(SVM_sigmoid['accuracy']*100,2)))
+
+ovl_svm = round(pd.DataFrame([SVM_rbf, SVM_linear, SVM_poly, SVM_sigmoid], index = ['SVM_rbf','SVM_linear', 'SVM_poly', 'SVM_sigmoid']),4)
+display(ovl_svm)
+
+r_forest_gini = RandomForestClassifier(n_estimators=100, criterion = 'gini', max_features = None,  min_samples_split = 0.05, min_samples_leaf = 0.001)
+r_forest_gini.fit(train_data, train_label)
+r_forest_gini_pred = r_forest_gini.predict(test_data)
+rforest_gini = model_eval(test_label, r_forest_gini_pred)
+print('Random Forest using Gini Index : %.2f percent.' % (round(rforest_gini['accuracy']*100,2))
+
+r_forest_entropy = RandomForestClassifier(n_estimators=100, criterion = 'entropy', max_features = None,  min_samples_split = 0.05, min_samples_leaf = 0.001)
+r_forest_entropy.fit(train_data, train_label)
+r_forest_entropy_pred = r_forest_entropy.predict(test_data)
+rforest_entropy = model_eval(test_label, r_forest_entropy_pred)
+print('Random Forest using Entropy : %.2f percent.' % (round(rforest_entropy['accuracy']*100,2)))
+
+
+ovl_rf = round(pd.DataFrame([rforest_gini, rforest_entropy], index = ['rforest_gini','rforest_entropy']),4)
+display(ovl_rf)
+
+ada = AdaBoostClassifier(n_estimators=100)                     
+ada.fit(train_data, train_label)
+ada_pred = ada.predict(test_data)
+adaboost = model_eval(test_label, ada_pred)
+print('Adaboost : %.2f percent.' % (round(adaboost['accuracy']*100,2)))
+
+
+ovl_ada = round(pd.DataFrame([adaboost], index = ['adaboost']),4)
+display(ovl_ada)
+
+log_reg = LogisticRegression(penalty = 'l2', dual = False, tol = 1e-4, fit_intercept = True, 
+                            solver = 'liblinear')
+log_reg.fit(train_data, train_label)
+log_reg_pred = log_reg.predict(test_data)
+logistic_reg = model_eval(test_label, log_reg_pred)
+print('Logistic Regression : %.2f percent.' % (round(logistic_reg['accuracy']*100,3)))
+
+
+ovl_logreg = round(pd.DataFrame([logistic_reg], index = ['logistic_reg']),4)
+display(ovl_logreg)
+
+from sklearn.neighbors import KNeighborsClassifier
+knn_outs = []
+for i in range(1,50,2):
+    knn = KNeighborsClassifier(n_neighbors=i)
+    knn.fit(train_data, train_label) 
+    knn_pred = knn.predict(test_data)
+    knn_perf = model_eval(test_label, knn_pred)
+    knn_perf['k'] = i
+    knn_outs.append(knn_perf)
+
+ovl_knn = round(pd.DataFrame(knn_outs),4)
+display(ovl_knn)
+
+overall_eval = pd.concat([ovl_dtree, ovl_ann, ovl_svm, ovl_rf, ovl_ada, ovl_logreg], axis = 0)
+overall_eval.sort_values(by = ['f_measure', 'accuracy'], ascending = False, inplace = True)
+
+printmd('Combing the performance statistics of all the model developed, as seen in table below,         we see that the ensemble model Adaboost hast the highest F-measure (0.6833), precision (0.7812)         and accuracy (0.8647). The Artificial neural network models are only marginally being in terms of         accuracy and F-measure. Almost all the model have an accuracy greater than 0.84, expect for two SVM         models. The table below lists the accuracy, error rate, F-measure, precision, recall, sensitivity and         specificity of all the models developed.')
+
+display(overall_eval)
+
+
+
+def generateRoc(test_data, test_label, classifiers, pred_labels, plot_labels, limiter):
+    
+    color = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:purple', 'tab:brown', 'tab:pink', 'tab:gray', 'tab:olive', 'tab:cyan']
+    
+    y_test = label_binarize(test_label, classes=['<=50K', '>50K'])
+    plt.figure()
+    
+    for i in range(len(classifiers)):
+        
+        if plot_labels[i] not in limiter:
+            continue
+        
+        y_score = classifiers[i].predict_proba(test_data)
+        pos_class_index = list(np.unique(pred_labels[i])).index('>50K')
+        
+        fpr, tpr, thres = metrics.roc_curve(y_test.ravel(),y_score[:,pos_class_index], pos_label=1)
+                               
+        lw = 2
+        plt.plot(fpr, tpr, color=color[i % len(color)],lw=lw, label=plot_labels[i])
+        
+    plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('Receiver operating characteristic (ROC)')
+    plt.legend(loc="lower right")
+    plt.show()
+
