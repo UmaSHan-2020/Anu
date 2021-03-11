@@ -1,0 +1,23 @@
+import pandas as pd
+data = pd.read_csv("Salary_Data.csv")
+data.head()
+data.info()
+data.corr()
+import seaborn as sns
+sns.distplot(data['YearsExperience'])
+import seaborn as sns
+sns.distplot(data['Salary'])
+sns.regplot(x="YearsExperience", y="Salary", data=data)
+import seaborn as sns
+sns.pairplot(data)
+data.boxplot(column=['YearsExperience'])
+data.boxplot(column=['Salary'])
+data['Salary'].hist()
+import statsmodels.formula.api as smf
+model = smf.ols("YearsExperience~Salary",data = data).fit()
+model.params
+print(model.tvalues, '\n', model.pvalues)
+(model.rsquared,model.rsquared_adj)
+newdata=pd.Series([40000,30000])
+data_pred=pd.DataFrame(newdata,columns=['Salary'])
+model.predict(data_pred)
