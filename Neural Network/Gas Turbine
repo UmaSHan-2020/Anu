@@ -1,0 +1,196 @@
+
+
+import numpy as np 
+import pandas as pd 
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+dataset = pd.read_csv('gas_turbines.csv')
+
+
+dataset.info()
+
+
+dataset.head()
+
+
+dataset.describe()
+
+
+f,ax = plt.subplots(figsize=(5,5))
+sns.heatmap(dataset.corr(), annot=True, linewidths=.5, fmt='.2f', ax=ax)
+plt.show()
+
+X1 = dataset.iloc[:, 0:1].values 
+y1 = dataset.iloc[:, -1].values 
+
+from sklearn.model_selection import train_test_split
+X1_train, X1_test, y1_train, y1_test = train_test_split(X1, y1, test_size = 0.2, random_state = 0)
+
+from sklearn.linear_model import LinearRegression
+regressor = LinearRegression()
+regressor.fit(X1_train, y1_train)
+
+y1_pred = regressor.predict(X1_test) 
+np.set_printoptions(precision=2)  
+print(np.concatenate(
+    (y1_pred.reshape(len(y1_pred),1), y1_test.reshape(len(y1_test),1)),axis=1)
+)
+
+from sklearn.metrics import r2_score
+lr_score = r2_score(y1_test, y1_pred)
+print(lr_score)
+scores = {}
+scores.update({'lr_score': lr_score})
+
+
+plt.scatter(X1_test, y1_test, color = 'red')  
+plt.plot(X1_test, regressor.predict(X1_test), color = 'blue')   
+plt.title('AT vs GTEP')
+plt.xlabel('AT')
+plt.ylabel('GTEP')
+plt.show()
+
+X2 = dataset.iloc[:, :-1].values
+y2 = dataset.iloc[:, -1].values
+
+from sklearn.model_selection import train_test_split
+X2_train, X2_test, y2_train, y2_test = train_test_split(X2, y2, test_size = 0.2, random_state = 0)
+
+from sklearn.linear_model import LinearRegression
+regressor = LinearRegression()
+regressor.fit(X2_train, y2_train)
+
+y2_pred = regressor.predict(X2_test)
+np.set_printoptions(precision=2) 
+print(np.concatenate(
+    (y2_pred.reshape(len(y2_pred),1), y2_test.reshape(len(y2_test),1)), axis=1)
+    )   
+
+mlr_score = r2_score(y2_test, y2_pred)
+print(mlr_score)
+scores.update({'mlr_score': mlr_score})
+
+b0 = regressor.intercept_
+coefs = regressor.coef_
+print (b0, coefs)
+print ("PE = {0:.2f} + {1:.2f}*AT + {2:.2f}*V + {3:.2f}*AP + {4:.2f}*RH".
+       format(b0, coefs[0], coefs[1], coefs[2], coefs[3]))
+
+X3 = dataset.iloc[:, :-1].values
+y3 = dataset.iloc[:, -1].values
+
+from sklearn.model_selection import train_test_split
+X3_train, X3_test, y3_train, y3_test = train_test_split(X3, y3, test_size = 0.2, random_state = 0)
+
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.linear_model import LinearRegression
+poly_reg = PolynomialFeatures(degree = 2)
+X3_poly = poly_reg.fit_transform(X3_train)
+regressor = LinearRegression()
+regressor.fit(X3_poly, y3_train)
+
+y3_pred = regressor.predict(poly_reg.transform(X3_test))
+np.set_printoptions(precision=2)
+print(np.concatenate
+      ((y3_pred.reshape(len(y3_pred),1), y3_test.reshape(len(y3_test),1)),axis=1)
+      )
+
+pr_score = r2_score(y3_test, y3_pred)
+print(pr_score)
+scores.update({'pr_score': pr_score})
+
+
+X4 = dataset.iloc[:, :-1].values
+y4 = dataset.iloc[:, -1].values
+y4 = y4.reshape(len(y4),1)
+
+from sklearn.model_selection import train_test_split
+X4_train, X4_test, y4_train, y4_test = train_test_split(X4, y4, test_size = 0.2, random_state = 0)
+
+from sklearn.preprocessing import StandardScaler
+sc_X = StandardScaler()
+sc_y = StandardScaler()    
+X4_train = sc_X.fit_transform(X4_train)
+y4_train = sc_y.fit_transform(y4_train)
+
+from sklearn.svm import SVR
+regressor = SVR(kernel = 'rbf')   
+regressor.fit(X4_train, y4_train)
+
+y4_pred = sc_y.inverse_transform(regressor.predict(sc_X.transform(X4_test)))
+np.set_printoptions(precision=2)
+print(np.concatenate
+      ((y4_pred.reshape(len(y4_pred),1), y4_test.reshape(len(y4_test),1)),
+       axis=1))
+
+svr_score = r2_score(y4_test, y4_pred)
+print(svr_score)
+scores.update({'svr_score': svr_score})
+
+X5 = dataset.iloc[:, :-1].values
+y5 = dataset.iloc[:, -1].values
+
+from sklearn.model_selection import train_test_split
+X5_train, X5_test, y5_train, y5_test = train_test_split(X5, y5, test_size = 0.2, random_state = 0)
+
+from sklearn.tree import DecisionTreeRegressor
+regressor = DecisionTreeRegressor(random_state = 0)
+regressor.fit(X5_train, y5_train)
+
+y5_pred = regressor.predict(X5_test)
+np.set_printoptions(precision=2)
+print(np.concatenate
+      ((y5_pred.reshape(len(y5_pred),1), y5_test.reshape(len(y5_test),1)),
+       axis=1))
+
+dtr_score = r2_score(y5_test, y5_pred)
+print(dtr_score)
+scores.update({'dtr_score': dtr_score})
+
+X6 = dataset.iloc[:, :-1].values
+y6 = dataset.iloc[:, -1].values
+
+from sklearn.model_selection import train_test_split
+X6_train, X6_test, y6_train, y6_test = train_test_split(X6, y6, test_size = 0.2, random_state = 0)
+
+from sklearn.ensemble import RandomForestRegressor
+regressor = RandomForestRegressor(n_estimators = 10, random_state = 0)    
+regressor.fit(X6_train, y6_train)
+
+y6_pred = regressor.predict(X6_test)
+np.set_printoptions(precision=2)
+print(np.concatenate
+      ((y6_pred.reshape(len(y6_pred),1), y6_test.reshape(len(y6_test),1)),
+       axis=1))
+
+rfr_score = r2_score(y6_test, y6_pred)
+print(rfr_score)
+scores.update({'rfr_score': rfr_score})
+
+X7 = dataset.iloc[:, :-1].values
+y7 = dataset.iloc[:, -1].values
+from sklearn.model_selection import train_test_split
+X7_train, X7_test, y7_train, y7_test = train_test_split(X7, y7, test_size = 0.2, random_state = 0)
+import tensorflow.keras
+from keras.models import Sequential 
+from keras.layers import Dense 
+regressor = Sequential() 
+regressor.add(Dense(units = 6, activation = 'relu')) 
+regressor.add(Dense(units = 1)) 
+regressor.compile(optimizer = 'adam', loss = 'mean_squared_error') 
+regressor.fit(X7_train, y7_train, batch_size = 32, epochs = 100)
+
+y7_pred = regressor.predict(X7_test)
+np.set_printoptions(precision=2)
+print(np.concatenate
+      ((y7_pred.reshape(len(y7_pred),1), y7_test.reshape(len(y7_test),1)),
+       axis=1))
+
+ann_score = r2_score(y7_test, y7_pred)
+print(ann_score)
+scores.update({'ann_score': ann_score})
+
+print(scores)
+
+
